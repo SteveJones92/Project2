@@ -1,5 +1,13 @@
 # data exploration tab content
 
+categorical_list <- function(data) {
+  names(data)[sapply(data, is.factor)]
+}
+
+numerical_list <- function(data) {
+  names(data)[!sapply(data, is.factor)]
+}
+
 # One-way and Two-way contingency tables
 contingency_table <- function(data, ...) {
   # get ellipsis values
@@ -9,9 +17,9 @@ contingency_table <- function(data, ...) {
   # create the contingency table
   table(data[params_match])
 }
-contingency_table(data,"Gender")
-contingency_table(data,"Gender", "Operating.System")
-contingency_table(data,"Gender", "Operating.System", "User.Behavior.Class")
+# contingency_table(data,"Gender")
+# contingency_table(data,"Gender", "Operating.System")
+# contingency_table(data,"Gender", "Operating.System", "User.Behavior.Class")
 
 # might want some form of value subsetting? one is choosing levels, another is range of values
 
@@ -34,8 +42,8 @@ numerical_summaries <- function(data, ...) {
   return(new_data)
 }
 
-head(numerical_summaries(data, "Age", "Gender"), 10)
-head(numerical_summaries(data, "Age", "Gender", "User.Behavior.Class"), 10)
+# head(numerical_summaries(data, "Age", "Gender"), 10)
+# head(numerical_summaries(data, "Age", "Gender", "User.Behavior.Class"), 10)
 
 
 # plots
@@ -62,7 +70,7 @@ boxplot <- function(data, x_var=NULL, fill_var=NULL, facet_var=NULL, ...) {
 
   return (plot)
 }
-boxplot(data, "Age", "User.Behavior.Class", "Gender")
+# boxplot(data, "Age", "User.Behavior.Class", "Gender")
 
 # histogram
 # 1 numerical, 1 categorical, another one for faceting
@@ -81,7 +89,7 @@ histogram <- function(data, x_var=NULL, fill_var=NULL, facet_var=NULL, ...) {
   return (plot)
 }
 # Can easily see the cutoffs and counts, for example
-histogram(data, "Data.Usage..MB.day.", "User.Behavior.Class", "Gender", binwidth = 30)
+# histogram(data, "Data.Usage..MB.day.", "User.Behavior.Class", "Gender", binwidth = 30)
 
 # scatterplot
 scatterplot <- function(data, x_var, y_var, color_var=NULL, facet_var=NULL, ...) {
@@ -99,7 +107,7 @@ scatterplot <- function(data, x_var, y_var, color_var=NULL, facet_var=NULL, ...)
   return (plot)
 }
 
-scatterplot(data, "Age", "Data.Usage..MB.day.", "User.Behavior.Class", "Gender")
+# scatterplot(data, "Age", "Data.Usage..MB.day.", "User.Behavior.Class", "Gender")
 
 # density plot
 density_plot <- function(data, x_var, fill_var=NULL, facet_var=NULL, ...) {
@@ -117,4 +125,4 @@ density_plot <- function(data, x_var, fill_var=NULL, facet_var=NULL, ...) {
   return (plot)
 }
 
-density_plot(data, "Data.Usage..MB.day.", "User.Behavior.Class", "Gender", alpha=.9)
+# density_plot(data, "Data.Usage..MB.day.", "User.Behavior.Class", "Gender", alpha=.9)
