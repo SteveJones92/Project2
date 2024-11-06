@@ -42,6 +42,8 @@ ui <- pageWithSidebar(
       ),
       tabPanel(
         "Data Exploration",
+        uiOutput("checkbox"),
+        uiOutput("plots")
       ),
     )
   )
@@ -130,7 +132,88 @@ server <- function(input, output, session) {
       write.csv(display_data(), con)
     }
   )
-  
+
+  output$checkbox <- renderUI({
+    cat_options <- names(display_data())[names(display_data()) %in% cat_list]
+    num_options <- names(display_data())[names(display_data()) %in% num_list]
+
+    fluid_rows <- list(
+      fluidRow(
+        column(3, checkboxInput("boxplot", "Boxplot")),
+        conditionalPanel(
+          condition = "input.boxplot == true",
+          column(3, selectInput("boxplot_x_var", "Select X Variable (Numerical)", choices = c(num_options, ""), selected = "")),
+          column(3, selectInput("boxplot_y_var", "Select Y Variable (Categorical)", choices = c(cat_options, ""), selected = "")),
+          column(3, selectInput("boxplot_facet_var", "Select Facet Variable (Categorical)", choices = c(cat_options, ""), selected = ""))
+        )
+      ),
+      fluidRow(
+        column(3, checkboxInput("histogram", "Histogram")),
+        conditionalPanel(
+          condition = "input.histogram == true",
+          column(3, selectInput("hist_x_var", "Select X (Numerical)", choices = c(num_options, ""), selected = "")),
+          column(3, selectInput("hist_y_var", "Select Y Variable (Categorical)", choices = c(cat_options, ""), selected = "")),
+          column(3, selectInput("hist_facet_var", "Select Facet Variable (Categorical)", choices = c(cat_options, ""), selected = ""))
+        )
+      ),
+      fluidRow(
+        column(3, checkboxInput("scatterplot", "Scatterplot")),
+        conditionalPanel(
+          condition = "input.scatterplot == true",
+          column(2, selectInput("scatter_x_var", "Select X Variable (Numerical)", choices = c(num_options, ""), selected = "")),
+          column(2, selectInput("scatter_y_var", "Select Y Variable (Numerical)", choices = c(num_options, ""), selected = "")),
+          column(2, selectInput("scatter_color_var", "Select Color Variable (Categorical)", choices = c(cat_options, ""), selected = "")),
+          column(2, selectInput("scatter_facet_var", "Select Facet Variable (Categorical)", choices = c(cat_options, ""), selected = ""))
+        )
+      ),
+      fluidRow(
+        column(3, checkboxInput("densityplot", "Density Plot")),
+        conditionalPanel(
+          condition = "input.densityplot == true",
+          column(3, selectInput("density_x_var", "Select X Variable (Numerical)", choices = c(num_options, ""), selected = "")),
+          column(3, selectInput("density_fill_var", "Select Fill Variable (Categorical)", choices = c(cat_options, ""), selected = "")),
+          column(3, selectInput("density_facet_var", "Select Facet Variable (Categorical)", choices = c(cat_options, ""), selected = ""))
+        )
+      )
+    )
+    fluid_rows
+  })
+
+  output$plots <- renderUI({
+    plot_list <- list()
+
+    if (input$boxplot && input$boxplot_x_var != "") {
+      plot_list$boxplot <- renderPlot({
+        fill_var <- if(input$boxplot_y_var == "") NULL else input$boxplot_y_var
+        facet_var <- if(input$boxplot_facet_var == "") NULL else input$boxplot_facet_var
+        boxplot(display_data(), input$boxplot_x_var, fill_var, facet_var)
+      })
+    }
+    if (input$histogram && input$hist_x_var != "") {
+      plot_list$histogram <- renderPlot({
+        fill_var <- if(input$hist_y_var == "") NULL else input$hist_y_var
+        facet_var <- if(input$hist_facet_var == "") NULL else input$hist_facet_var
+        histogram(display_data(), input$hist_x_var, fill_var, facet_var)
+      })
+    }
+    if (input$scatterplot && input$scatter_x_var != "" && input$scatter_y_var != "") {
+      plot_list$scatterplot <- renderPlot({
+        color_var <- if(input$scatter_color_var == "") NULL else input$scatter_color_var
+        facet_var <- if(input$scatter_facet_var == "") NULL else input$scatter_facet_var
+        scatterplot(display_data(), input$scatter_x_var, input$scatter_y_var, color_var, facet_var)
+      })
+    }
+    if (input$densityplot && input$density_x_var != "") {
+      plot_list$densityplot <- renderPlot({
+        fill_var <- if(input$density_fill_var == "") NULL else input$density_fill_var
+        facet_var <- if(input$density_facet_var == "") NULL else input$density_facet_var
+        density_plot(display_data(), input$density_x_var, fill_var, facet_var)
+      })
+    }
+
+    do.call(tagList, plot_list)
+  })
+
   output$data_table <- DT::renderDataTable({
     display_data()
   })
