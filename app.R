@@ -174,6 +174,13 @@ server <- function(input, output, session) {
           column(3, selectInput("density_fill_var", "Select Fill Variable (Categorical)", choices = c(cat_options, ""), selected = "")),
           column(3, selectInput("density_facet_var", "Select Facet Variable (Categorical)", choices = c(cat_options, ""), selected = ""))
         )
+      ),
+      fluidRow(
+        column(3, checkboxInput("radarplot", "Radar Plot")),
+        conditionalPanel(
+          condition = "input.radarplot == true",
+          column(9, selectInput("radar_cat_var", "Select Categorical Variable", choices = c(cat_options, ""), selected = ""))
+        )
       )
     )
     fluid_rows
@@ -208,6 +215,11 @@ server <- function(input, output, session) {
         fill_var <- if(input$density_fill_var == "") NULL else input$density_fill_var
         facet_var <- if(input$density_facet_var == "") NULL else input$density_facet_var
         density_plot(display_data(), input$density_x_var, fill_var, facet_var)
+      })
+    }
+    if (input$radarplot && input$radar_cat_var != "") {
+      plot_list$radarplot <- renderPlot({
+        radar_plot(display_data(), input$radar_cat_var)
       })
     }
 

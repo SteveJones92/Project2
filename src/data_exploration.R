@@ -42,7 +42,7 @@ numerical_summaries <- function(data, ...) {
   return(new_data)
 }
 
-# head(numerical_summaries(data, "Age", "Gender"), 10)
+head(numerical_summaries(data, "Age", "Gender"), 10)
 # head(numerical_summaries(data, "Age", "Gender", "User.Behavior.Class"), 10)
 
 
@@ -126,3 +126,24 @@ density_plot <- function(data, x_var, fill_var=NULL, facet_var=NULL, ...) {
 }
 
 # density_plot(data, "Data.Usage..MB.day.", "User.Behavior.Class", "Gender", alpha=.9)
+
+library(ggradar)
+library(scales)
+# https://github.com/ricardo-bion/ggradar
+
+# radar plot based on categorical variable and the remaining numeric variables
+radar_plot <- function(data, cat_var) {
+  # get the numerical variables
+  num_vars <- numerical_list(data)
+  # get the data for the radar plot
+  new_data <- data |>
+    select(cat_var, unlist(num_vars)) |>
+    group_by(!!sym(cat_var)) |>
+    rename(group = !!sym(cat_var)) |>
+    summarise(across(all_of(num_vars), mean)) |>
+    mutate(across(all_of(num_vars), ~ rescale(.x, to = c(0, 1), from = range(data[[cur_column()]]))))
+
+  ggradar(new_data)
+}
+# radar_data <- radar_plot(data, "Operating.System")
+# ggradar(radar_data)
