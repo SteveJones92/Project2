@@ -202,10 +202,17 @@ server <- function(input, output, session) {
         facet_var <- if(input$boxplot_facet_var == "") NULL else input$boxplot_facet_var
         boxplot(display_data(), input$boxplot_x_var, fill_var, facet_var, input$flip)
       })
-      plot_list$boxplot_summary <- checkboxInput("boxplot_summary", "Show Summary")
-      plot_list$boxplot_summary_text <- conditionalPanel(
-        condition = "input.boxplot_summary == true",
-        tableOutput("boxplot_summary_text")
+      plot_list$boxplot_summary_cat <- column(4, checkboxInput("boxplot_summary_cat", "Show Categorical Table"))
+      plot_list$boxplot_summary_num <- column(8, checkboxInput("boxplot_summary_num", "Show Numerical Summaries"))
+      plot_list$boxplot_summary_tables <- fluidRow(
+        column(4, conditionalPanel(
+          condition = "input.boxplot_summary_cat == true",
+          tableOutput("boxplot_summary_cat_table")
+        )),
+        column(8, conditionalPanel(
+          condition = "input.boxplot_summary_num == true",
+          dataTableOutput("boxplot_summary_num_table")
+        ))
       )
     }
     if (input$histogram && input$hist_x_var != "") {
@@ -214,10 +221,17 @@ server <- function(input, output, session) {
         facet_var <- if(input$hist_facet_var == "") NULL else input$hist_facet_var
         histogram(display_data(), input$hist_x_var, fill_var, facet_var)
       })
-      plot_list$histogram_summary <- checkboxInput("histogram_summary", "Show Summary")
-      plot_list$histogram_summary_text <- conditionalPanel(
-        condition = "input.histogram_summary == true",
-        tableOutput("histogram_summary_text")
+      plot_list$histogram_summary_cat <- column(4, checkboxInput("histogram_summary_cat", "Show Categorical Table"))
+      plot_list$histogram_summary_num <- column(8, checkboxInput("histogram_summary_num", "Show Numerical Summaries"))
+      plot_list$histogram_summary_tables <- fluidRow(
+        column(4, conditionalPanel(
+          condition = "input.histogram_summary_cat == true",
+          tableOutput("histogram_summary_cat_table")
+        )),
+        column(8, conditionalPanel(
+          condition = "input.histogram_summary_num == true",
+          dataTableOutput("histogram_summary_num_table")
+        ))
       )
     }
     if (input$scatterplot && input$scatter_x_var != "" && input$scatter_y_var != "") {
@@ -226,10 +240,17 @@ server <- function(input, output, session) {
         facet_var <- if(input$scatter_facet_var == "") NULL else input$scatter_facet_var
         scatterplot(display_data(), input$scatter_x_var, input$scatter_y_var, color_var, facet_var)
       })
-      plot_list$scatterplot_summary <- checkboxInput("scatterplot_summary", "Show Summary")
-      plot_list$scatterplot_summary_text <- conditionalPanel(
-        condition = "input.scatterplot_summary == true",
-        tableOutput("scatterplot_summary_text")
+      plot_list$scatterplot_summary_cat <- column(4, checkboxInput("scatterplot_summary_cat", "Show Categorical Table"))
+      plot_list$scatterplot_summary_num <- column(8, checkboxInput("scatterplot_summary_num", "Show Numerical Summaries"))
+      plot_list$scatterplot_summary_tables <- fluidRow(
+        conditionalPanel(
+          condition = "input.scatterplot_summary_cat == true",
+          tableOutput("scatterplot_summary_cat_table")
+        ),
+        conditionalPanel(
+          condition = "input.scatterplot_summary_num == true",
+          dataTableOutput("scatterplot_summary_num_table")
+        )
       )
     }
     if (input$densityplot && input$density_x_var != "") {
@@ -238,10 +259,17 @@ server <- function(input, output, session) {
         facet_var <- if(input$density_facet_var == "") NULL else input$density_facet_var
         density_plot(display_data(), input$density_x_var, fill_var, facet_var)
       })
-      plot_list$densityplot_summary <- checkboxInput("densityplot_summary", "Show Summary")
-      plot_list$densityplot_summary_text <- conditionalPanel(
-        condition = "input.densityplot_summary == true",
-        tableOutput("densityplot_summary_text")
+      plot_list$densityplot_summary_cat <- column(4, checkboxInput("densityplot_summary_cat", "Show Categorical Table"))
+      plot_list$densityplot_summary_num <- column(8, checkboxInput("densityplot_summary_num", "Show Numerical Summaries"))
+      plot_list$densityplot_summary_tables <- fluidRow(
+        column(4, conditionalPanel(
+          condition = "input.densityplot_summary_cat == true",
+          tableOutput("densityplot_summary_cat_table")
+        )),
+        column(8, conditionalPanel(
+          condition = "input.densityplot_summary_num == true",
+          dataTableOutput("densityplot_summary_num_table")
+        ))
       )
     }
     if (input$radarplot && input$radar_cat_var != "") {
@@ -267,17 +295,29 @@ server <- function(input, output, session) {
     do.call(tagList, plot_list)
   })
 
-  output$boxplot_summary_text <- renderTable({
+  output$boxplot_summary_cat_table <- renderTable({
     contingency_table(display_data(), input$boxplot_y_var, input$boxplot_facet_var)
   })
-  output$histogram_summary_text <- renderTable({
+  output$boxplot_summary_num_table <- renderDataTable({
+    numerical_summaries(display_data(), input$boxplot_x_var, input$boxplot_y_var, input$boxplot_facet_var)
+  })
+  output$histogram_summary_cat_table <- renderTable({
     contingency_table(display_data(), input$hist_y_var, input$hist_facet_var)
   })
-  output$scatterplot_summary_text <- renderTable({
+  output$histogram_summary_num_table <- renderDataTable({
+    numerical_summaries(display_data(), input$hist_x_var, input$hist_y_var, input$hist_facet_var)
+  })
+  output$scatterplot_summary_cat_table <- renderTable({
     contingency_table(display_data(), input$scatter_color_var, input$scatter_facet_var)
   })
-  output$densityplot_summary_text <- renderTable({
+  output$scatterplot_summary_num_table <- renderDataTable({
+    numerical_summaries(display_data(), input$scatter_x_var, input$scatter_y_var, input$scatter_facet_var)
+  })
+  output$densityplot_summary_cat_table <- renderTable({
     contingency_table(display_data(), input$density_fill_var, input$density_facet_var)
+  })
+  output$densityplot_summary_num_table <- renderDataTable({
+    numerical_summaries(display_data(), input$density_x_var, input$density_fill_var, input$density_facet_var)
   })
   output$radarplot_summary_text <- renderTable({
     contingency_table(display_data(), input$radar_cat_var)

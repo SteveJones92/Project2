@@ -18,7 +18,7 @@ contingency_table <- function(data, ...) {
     return(data.frame(Category = "All", Frequency = nrow(data)))
   }
   # create the contingency table
-  table(data[params_match])
+  return (table(data[params_match]))
 }
 # contingency_table(data, "Gender")
 # contingency_table(data,"Gender", "Operating.System")
@@ -37,15 +37,19 @@ numerical_summaries <- function(data, ...) {
   # get categorical list
   cat_list <- params_match[params_match %in% names(data)[sapply(data, is.factor)]]
 
+  if (length(quant_list) == 0) {
+    quant_list <- numerical_list(data)
+  }
+
   # select by chosen data, group by categorical and then get summaries of numerical
   new_data <- data |>
     select(params_match) |>
     group_by(across(all_of(cat_list))) |>
-    mutate(across((quant_list), list(mean = mean, median = median, sd = sd), .names = "{.col}_{.fn}"))
-  return(new_data)
+    summarise(across(all_of(quant_list), list(mean = mean, median = median, sd = sd, iqr = IQR), .names = "{.col}_{.fn}"))
+  return (new_data)
 }
-
-head(numerical_summaries(data, "Age", "Gender"), 10)
+# numerical_summaries(data, "Age")
+# numerical_summaries(data, "Age", "Gender")
 # head(numerical_summaries(data, "Age", "Gender", "User.Behavior.Class"), 10)
 
 
