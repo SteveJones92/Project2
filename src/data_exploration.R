@@ -14,10 +14,13 @@ contingency_table <- function(data, ...) {
   params <- list(...)
   # get the ellipsis that match the names in the data
   params_match <- unlist(params[params %in% names(data)])
+  if (length(params_match) == 0) {
+    return(data.frame(Category = "All", Frequency = nrow(data)))
+  }
   # create the contingency table
   table(data[params_match])
 }
-# contingency_table(data,"Gender")
+# contingency_table(data, "Gender")
 # contingency_table(data,"Gender", "Operating.System")
 # contingency_table(data,"Gender", "Operating.System", "User.Behavior.Class")
 
@@ -56,8 +59,12 @@ library(tidyverse)
 
 # boxplot
 # 1 numerical, 1 categorical, another one for faceting
-boxplot <- function(data, x_var=NULL, fill_var=NULL, facet_var=NULL, ...) {
-  mapping <- list(x = sym(x_var))
+boxplot <- function(data, x_var=NULL, fill_var=NULL, facet_var=NULL, flip=FALSE, ...) {
+  if (flip) {
+    mapping <- list(y = sym(x_var))
+  } else {
+    mapping <- list(x = sym(x_var))
+  }
   if (!is.null(fill_var)) {
     mapping$fill <- sym(fill_var)
   }
@@ -147,3 +154,8 @@ radar_plot <- function(data, cat_var) {
 }
 # radar_data <- radar_plot(data, "Operating.System")
 # ggradar(radar_data)
+
+# pairs(data |> select(where(is.numeric)))
+pairs_plot <- function(data) {
+  pairs(data |> select(where(is.numeric)))
+}

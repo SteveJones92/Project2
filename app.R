@@ -142,59 +142,71 @@ server <- function(input, output, session) {
         column(3, checkboxInput("boxplot", "Boxplot")),
         conditionalPanel(
           condition = "input.boxplot == true",
-          column(3, selectInput("boxplot_x_var", "Select X Variable (Numerical)", choices = c(num_options, ""), selected = "")),
-          column(3, selectInput("boxplot_y_var", "Select Y Variable (Categorical)", choices = c(cat_options, ""), selected = "")),
-          column(3, selectInput("boxplot_facet_var", "Select Facet Variable (Categorical)", choices = c(cat_options, ""), selected = ""))
+          column(2, selectInput("boxplot_x_var", "Select X Variable (Numerical)", choices = c("", num_options), selected = "")),
+          column(2, selectInput("boxplot_y_var", "Select Y Variable (Categorical)", choices = c("", cat_options), selected = "")),
+          column(2, selectInput("boxplot_facet_var", "Select Facet Variable (Categorical)", choices = c("", cat_options), selected = "")),
+          column(3, checkboxInput("flip", "Flip Axes"))
         )
       ),
       fluidRow(
         column(3, checkboxInput("histogram", "Histogram")),
         conditionalPanel(
           condition = "input.histogram == true",
-          column(3, selectInput("hist_x_var", "Select X (Numerical)", choices = c(num_options, ""), selected = "")),
-          column(3, selectInput("hist_y_var", "Select Y Variable (Categorical)", choices = c(cat_options, ""), selected = "")),
-          column(3, selectInput("hist_facet_var", "Select Facet Variable (Categorical)", choices = c(cat_options, ""), selected = ""))
+          column(3, selectInput("hist_x_var", "Select X (Numerical)", choices =  c("", num_options), selected = "")),
+          column(3, selectInput("hist_y_var", "Select Y Variable (Categorical)", choices = c("", cat_options), selected = "")),
+          column(3, selectInput("hist_facet_var", "Select Facet Variable (Categorical)", choices = c("", cat_options), selected = ""))
         )
       ),
       fluidRow(
         column(3, checkboxInput("scatterplot", "Scatterplot")),
         conditionalPanel(
           condition = "input.scatterplot == true",
-          column(2, selectInput("scatter_x_var", "Select X Variable (Numerical)", choices = c(num_options, ""), selected = "")),
-          column(2, selectInput("scatter_y_var", "Select Y Variable (Numerical)", choices = c(num_options, ""), selected = "")),
-          column(2, selectInput("scatter_color_var", "Select Color Variable (Categorical)", choices = c(cat_options, ""), selected = "")),
-          column(2, selectInput("scatter_facet_var", "Select Facet Variable (Categorical)", choices = c(cat_options, ""), selected = ""))
+          column(2, selectInput("scatter_x_var", "Select X Variable (Numerical)", choices = c("", num_options), selected = "")),
+          column(2, selectInput("scatter_y_var", "Select Y Variable (Numerical)", choices = c("", num_options), selected = "")),
+          column(2, selectInput("scatter_color_var", "Select Color Variable (Categorical)", choices = c("", cat_options), selected = "")),
+          column(2, selectInput("scatter_facet_var", "Select Facet Variable (Categorical)", choices = c("", cat_options), selected = ""))
         )
       ),
       fluidRow(
         column(3, checkboxInput("densityplot", "Density Plot")),
         conditionalPanel(
           condition = "input.densityplot == true",
-          column(3, selectInput("density_x_var", "Select X Variable (Numerical)", choices = c(num_options, ""), selected = "")),
-          column(3, selectInput("density_fill_var", "Select Fill Variable (Categorical)", choices = c(cat_options, ""), selected = "")),
-          column(3, selectInput("density_facet_var", "Select Facet Variable (Categorical)", choices = c(cat_options, ""), selected = ""))
+          column(3, selectInput("density_x_var", "Select X Variable (Numerical)", choices = c("", num_options), selected = "")),
+          column(3, selectInput("density_fill_var", "Select Fill Variable (Categorical)", choices = c("", cat_options), selected = "")),
+          column(3, selectInput("density_facet_var", "Select Facet Variable (Categorical)", choices = c("", cat_options), selected = ""))
         )
       ),
       fluidRow(
         column(3, checkboxInput("radarplot", "Radar Plot")),
         conditionalPanel(
           condition = "input.radarplot == true",
-          column(9, selectInput("radar_cat_var", "Select Categorical Variable", choices = c(cat_options, ""), selected = ""))
+          column(9, selectInput("radar_cat_var", "Select Categorical Variable", choices = c("", cat_options), selected = ""))
         )
+      ),
+      fluidRow(
+        column(3, checkboxInput("pairsplot", "Pairs Plot")),
       )
     )
     fluid_rows
   })
 
   output$plots <- renderUI({
+    if (any(sapply(list(input$boxplot, input$histogram, input$scatterplot, input$densityplot, input$radarplot, input$pairsplot), is.null))) {
+      return(NULL)
+    }
     plot_list <- list()
 
     if (input$boxplot && input$boxplot_x_var != "") {
       plot_list$boxplot <- renderPlot({
         fill_var <- if(input$boxplot_y_var == "") NULL else input$boxplot_y_var
         facet_var <- if(input$boxplot_facet_var == "") NULL else input$boxplot_facet_var
-        boxplot(display_data(), input$boxplot_x_var, fill_var, facet_var)
+        boxplot(display_data(), input$boxplot_x_var, fill_var, facet_var, input$flip)
       })
+      plot_list$boxplot_summary <- checkboxInput("boxplot_summary", "Show Summary")
+      plot_list$boxplot_summary_text <- conditionalPanel(
+        condition = "input.boxplot_summary == true",
+        tableOutput("boxplot_summary_text")
+      )
     }
     if (input$histogram && input$hist_x_var != "") {
       plot_list$histogram <- renderPlot({
@@ -202,6 +214,11 @@ server <- function(input, output, session) {
         facet_var <- if(input$hist_facet_var == "") NULL else input$hist_facet_var
         histogram(display_data(), input$hist_x_var, fill_var, facet_var)
       })
+      plot_list$histogram_summary <- checkboxInput("histogram_summary", "Show Summary")
+      plot_list$histogram_summary_text <- conditionalPanel(
+        condition = "input.histogram_summary == true",
+        tableOutput("histogram_summary_text")
+      )
     }
     if (input$scatterplot && input$scatter_x_var != "" && input$scatter_y_var != "") {
       plot_list$scatterplot <- renderPlot({
@@ -209,6 +226,11 @@ server <- function(input, output, session) {
         facet_var <- if(input$scatter_facet_var == "") NULL else input$scatter_facet_var
         scatterplot(display_data(), input$scatter_x_var, input$scatter_y_var, color_var, facet_var)
       })
+      plot_list$scatterplot_summary <- checkboxInput("scatterplot_summary", "Show Summary")
+      plot_list$scatterplot_summary_text <- conditionalPanel(
+        condition = "input.scatterplot_summary == true",
+        tableOutput("scatterplot_summary_text")
+      )
     }
     if (input$densityplot && input$density_x_var != "") {
       plot_list$densityplot <- renderPlot({
@@ -216,14 +238,49 @@ server <- function(input, output, session) {
         facet_var <- if(input$density_facet_var == "") NULL else input$density_facet_var
         density_plot(display_data(), input$density_x_var, fill_var, facet_var)
       })
+      plot_list$densityplot_summary <- checkboxInput("densityplot_summary", "Show Summary")
+      plot_list$densityplot_summary_text <- conditionalPanel(
+        condition = "input.densityplot_summary == true",
+        tableOutput("densityplot_summary_text")
+      )
     }
     if (input$radarplot && input$radar_cat_var != "") {
       plot_list$radarplot <- renderPlot({
         radar_plot(display_data(), input$radar_cat_var)
       })
+      plot_list$radarplot_summary <- checkboxInput("radarplot_summary", "Show Summary")
+      plot_list$radarplot_summary_text <- conditionalPanel(
+          condition = "input.radarplot_summary == true",
+          tableOutput("radarplot_summary_text")
+      )
+    }
+    if (input$pairsplot) {
+      plot_list$pairsplot <- renderPlot({
+        pairs_data <- display_data() |> select(where(is.numeric))
+        if (length(pairs_data) < 2) {
+          return(text(0.5, 0.5, "Less than 2 numeric variables present, cannot show pairs plot.", cex = 1.5))
+        }
+        pairs(pairs_data)
+      })
     }
 
     do.call(tagList, plot_list)
+  })
+
+  output$boxplot_summary_text <- renderTable({
+    contingency_table(display_data(), input$boxplot_y_var, input$boxplot_facet_var)
+  })
+  output$histogram_summary_text <- renderTable({
+    contingency_table(display_data(), input$hist_y_var, input$hist_facet_var)
+  })
+  output$scatterplot_summary_text <- renderTable({
+    contingency_table(display_data(), input$scatter_color_var, input$scatter_facet_var)
+  })
+  output$densityplot_summary_text <- renderTable({
+    contingency_table(display_data(), input$density_fill_var, input$density_facet_var)
+  })
+  output$radarplot_summary_text <- renderTable({
+    contingency_table(display_data(), input$radar_cat_var)
   })
 
   output$data_table <- DT::renderDataTable({
