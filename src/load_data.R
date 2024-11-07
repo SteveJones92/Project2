@@ -12,5 +12,3 @@ data <- data |>
   mutate(across(where(is.character), as.factor),
          User.Behavior.Class = as.factor(User.Behavior.Class)) |>
   select(-User.ID)
-
-# str(data)
