@@ -30,6 +30,7 @@ ui <- pageWithSidebar(
     tabsetPanel(
       tabPanel(
         "About",
+        imageOutput("about_image"),
         h3("Purpose"),
         hr(),
         "The purpose of this app is to provide a dynamic way to explore the provided dataset (mobile device user data).
@@ -80,7 +81,21 @@ ui <- pageWithSidebar(
         ),
         br(),
         hr(),
-        imageOutput("about_image"),
+        h3("Data Exploration Summary"),
+        markdown("
+        Looking at the Radar Plot, a few standout items:
+        * Samsung Galaxy S21 has a slightly older population mean.
+        * iOS users use their devices slightly more than Android users.
+        * Males use ever so slightly more data.
+        * Probably the most interesting, age is not a factor in the level of user (light - extreme usage).
+
+        The pairs plot shows the same store as the radar plot for age. The scatterplot and pairs plot shows an artifact
+        of data generation as well. The data would be a lot more interesting if it were more naturally collected and had
+        more interesting categories to compare. I was hoping to find popularity of devices and battery efficiency type data,
+        but that isn't possible with this data.
+        "),
+        br(),
+        br()
       ),
       tabPanel(
         "Data Download",
@@ -329,10 +344,17 @@ server <- function(input, output, session) {
       plot_list$radarplot <- renderPlot({
         radar_plot(display_data(), input$radar_cat_var)
       })
-      plot_list$radarplot_summary <- checkboxInput("radarplot_summary", "Show Summary")
-      plot_list$radarplot_summary_text <- conditionalPanel(
-          condition = "input.radarplot_summary == true",
-          tableOutput("radarplot_summary_text")
+      plot_list$radarplot_summary_cat <- column(4, checkboxInput("radarplot_summary_cat", "Show Categorical Table"))
+      plot_list$radarplot_summary_num <- column(8, checkboxInput("radarplot_summary_num", "Show Numerical Summary"))
+      plot_list$radarplot_summary_tables <- fluidRow(
+        column(4, conditionalPanel(
+          condition = "input.radarplot_summary_cat == true",
+          tableOutput("radarplot_summary_cat_table")
+        )),
+        column(8, conditionalPanel(
+          condition = "input.radarplot_summary_num == true",
+          uiOutput("radarplot_summary_text")
+        ))
       )
     }
     if (input$pairsplot) {
@@ -372,8 +394,28 @@ server <- function(input, output, session) {
   output$densityplot_summary_num_table <- renderDataTable({
     numerical_summaries(display_data(), input$density_x_var, input$density_fill_var, input$density_facet_var)
   })
-  output$radarplot_summary_text <- renderTable({
+  output$radarplot_summary_cat_table <- renderTable({
     contingency_table(display_data(), input$radar_cat_var)
+  })
+  output$radarplot_summary_text <- renderUI({
+    selected_category <- input$radar_cat_var
+    category_levels <- levels(display_data()[[selected_category]])
+    category_str <- paste(category_levels, collapse=", ")
+
+    min_data <- display_data() |> group_by(!!sym(selected_category)) |> select(where(is.numeric)) |> summarise(across(everything(), min))
+    max_data <- display_data() |> group_by(!!sym(selected_category)) |> select(where(is.numeric)) |> summarise(across(everything(), max))
+    mean_data <- display_data() |> group_by(!!sym(selected_category)) |> select(where(is.numeric)) |> summarise(across(everything(), ~round(mean(.), 2)))
+
+    min_data <- min_data[-1]
+    max_data <- max_data[-1]
+    mean_data <- mean_data[-1]
+    summary_text <- paste0("The numeric variable ", names(min_data), " falls at the ratio of ", round((mean_data - min_data) / (max_data - min_data), 2), "<br>")
+    HTML("This is the order for the following array values:", "<br>", category_str, "<br>", "<br>", paste(
+      "Min: ", min_data,
+      "Max: ", max_data,
+      "Mean: ", mean_data, "<br>",
+      summary_text, "<br>", collapse="<br>"
+    ))
   })
 
   output$data_table <- DT::renderDataTable({
