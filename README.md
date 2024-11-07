@@ -4,7 +4,7 @@
 > [https://www.kaggle.com/datasets/valakhorasani/mobile-device-usage-and-user-behavior-dataset/data](https://www.kaggle.com/datasets/valakhorasani/mobile-device-usage-and-user-behavior-dataset/data)
 
 ### app.R
-This repository holds an app.R file used to launch an RStudio shiny app. The app is also hosted on shinyapps.io (temporarily).
+This repository holds an app.R file used to launch an RStudio shiny app. The app is also hosted on shinyapps.io (temporarily) [https://sjones9.shinyapps.io/project2/](https://sjones9.shinyapps.io/project2/).
 
 ### Purpose
 The purpose of this app is to provide a user-friendly interface to explore the Mobile Device Usage and User Behavior Dataset.
