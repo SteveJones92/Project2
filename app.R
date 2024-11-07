@@ -30,18 +30,71 @@ ui <- pageWithSidebar(
     tabsetPanel(
       tabPanel(
         "About",
-        "Placeholder about text",
+        h3("Purpose"),
+        hr(),
+        "The purpose of this app is to provide a dynamic way to explore the provided dataset (mobile device user data).
+        Possible interesting comparisons that can be made is androids vs iphones across categories of battery drain, app and data usage, screen time, age, and gender.",
         br(),
+        h3("Data and Source"),
+        hr(),
+        "The dataset is generated/simulated from general mobile usage trends and is not raw data. As such, certain information should not be compared, such as the popularity of different devices, relational comparisons of categorical variables.
+        The data can be checked for general values of numerical variables and general trends of usage data.",
+        br(),
+        br(),
+        a("https://www.kaggle.com/datasets/valakhorasani/mobile-device-usage-and-user-behavior-dataset/data", href = "https://www.kaggle.com/datasets/valakhorasani/mobile-device-usage-and-user-behavior-dataset/data"),
+        br(),
+        h3("Sidebar and Tab Descriptions"),
+        hr(),
+        h4("Sidebar"),
+        "The sidebar is used to subset the data. Selecting the submit button is required to update the data to the current selection.",
+        h5(markdown("___Categorical & Levels___")),
+        "The categorical variables are selectable down to a minimum of 2 items. If trying to select less than 2, the selection will be forced to the current selection.
+        The levels of each categorical selection are displayed as well (defaulting to all levels). To remove a level, select it and press backspace/delete.",
+        h5(markdown("___Numerical___")),
+        "There are 2 numeric variable boxes. They default to having no selection. If no selection is made, all numeric variables are used. If a selection is made, the range sliders will appear. It doesn't matter
+        which selection is used first, but a selection in one will remove the option from the other.",
+        br(),
+        br(),
+        h4("Tabs"),
+        "There are 3 selectable tabs in the main window.",
+        h5(markdown("___About___")),
+        "A description of the application and it's features.",
+        h5(markdown("___Data Download___")),
+        "An area to view and download the subsetted data.",
+        h5(markdown("___Data Exploration___")),
+        "An area to explore the data through plots and summaries of plot data. There are 6 plots available to choose from.",
+        # list of items
+        markdown(
+          "
+          1. Boxplot - 1 numeric, 1 categorical for fill, 1 categorical for facet, and an option to flip the display axis
+          2. Histogram - 1 numeric, 1 categorical for fill, and 1 categorical for facet
+          3. Scatterplot - 2 numeric, 1 categorical for fill, and 1 categorical for facet
+          4. Density Plot - 1 numeric, 1 categorical for fill, and 1 categorical for facet
+          5. Radar Plot - 1 categorical, the rest of numeric variables will be used in the spider plot
+          6. Pairs Plot - Requires 2 numeric variable selections, and draws the pairs() plot for quick viewing of numeric plots against each other.
+          
+          After most plots are categorical and numerical selection for summaries. The pairs plot is for visual purposes only.
+          * Categorical summaries will be table counts based on selected categorical variables. If none are selected, then it will be the total count of all the rows.
+          * Numerical summaries will be mean, median, sd, and IQR. There is no numerical summary for the radar plot, but instead it will get text describing the data.
+          "
+        ),
+        br(),
+        hr(),
         imageOutput("about_image"),
       ),
       tabPanel(
         "Data Download",
+        h3("Data Table Subset By Sidebar Selections"),
+        "Select the download button below the data table to download the data subset as a csv file.",
+        hr(),
         DT::dataTableOutput("data_table"),
+        hr(),
         br(),
         downloadLink('downloadData', 'Download'),
       ),
       tabPanel(
         "Data Exploration",
+        hr(),
         uiOutput("checkbox"),
         uiOutput("plots")
       ),
@@ -142,9 +195,9 @@ server <- function(input, output, session) {
         column(3, checkboxInput("boxplot", "Boxplot")),
         conditionalPanel(
           condition = "input.boxplot == true",
-          column(2, selectInput("boxplot_x_var", "Select X Variable (Numerical)", choices = c("", num_options), selected = "")),
-          column(2, selectInput("boxplot_y_var", "Select Y Variable (Categorical)", choices = c("", cat_options), selected = "")),
-          column(2, selectInput("boxplot_facet_var", "Select Facet Variable (Categorical)", choices = c("", cat_options), selected = "")),
+          column(2, selectInput("boxplot_x_var", "Select X (Numerical)", choices = num_options, selected = num_options[1])),
+          column(2, selectInput("boxplot_y_var", "Select Y (Categorical)", choices = c("", cat_options), selected = "")),
+          column(2, selectInput("boxplot_facet_var", "Select Facet (Categorical)", choices = c("", cat_options), selected = "")),
           column(3, checkboxInput("flip", "Flip Axes"))
         )
       ),
@@ -152,35 +205,35 @@ server <- function(input, output, session) {
         column(3, checkboxInput("histogram", "Histogram")),
         conditionalPanel(
           condition = "input.histogram == true",
-          column(3, selectInput("hist_x_var", "Select X (Numerical)", choices =  c("", num_options), selected = "")),
-          column(3, selectInput("hist_y_var", "Select Y Variable (Categorical)", choices = c("", cat_options), selected = "")),
-          column(3, selectInput("hist_facet_var", "Select Facet Variable (Categorical)", choices = c("", cat_options), selected = ""))
+          column(3, selectInput("hist_x_var", "Select X (Numerical)", choices =  num_options, selected = num_options[1])),
+          column(3, selectInput("hist_y_var", "Select Y (Categorical)", choices = c("", cat_options), selected = "")),
+          column(3, selectInput("hist_facet_var", "Select Facet (Categorical)", choices = c("", cat_options), selected = ""))
         )
       ),
       fluidRow(
         column(3, checkboxInput("scatterplot", "Scatterplot")),
         conditionalPanel(
           condition = "input.scatterplot == true",
-          column(2, selectInput("scatter_x_var", "Select X Variable (Numerical)", choices = c("", num_options), selected = "")),
-          column(2, selectInput("scatter_y_var", "Select Y Variable (Numerical)", choices = c("", num_options), selected = "")),
-          column(2, selectInput("scatter_color_var", "Select Color Variable (Categorical)", choices = c("", cat_options), selected = "")),
-          column(2, selectInput("scatter_facet_var", "Select Facet Variable (Categorical)", choices = c("", cat_options), selected = ""))
+          column(2, selectInput("scatter_x_var", "Select X (Numerical)", choices = num_options, selected = num_options[1])),
+          column(2, selectInput("scatter_y_var", "Select Y (Numerical)", choices = num_options, selected = num_options[2])),
+          column(2, selectInput("scatter_color_var", "Select Fill (Categorical)", choices = c("", cat_options), selected = "")),
+          column(2, selectInput("scatter_facet_var", "Select Facet (Categorical)", choices = c("", cat_options), selected = ""))
         )
       ),
       fluidRow(
         column(3, checkboxInput("densityplot", "Density Plot")),
         conditionalPanel(
           condition = "input.densityplot == true",
-          column(3, selectInput("density_x_var", "Select X Variable (Numerical)", choices = c("", num_options), selected = "")),
-          column(3, selectInput("density_fill_var", "Select Fill Variable (Categorical)", choices = c("", cat_options), selected = "")),
-          column(3, selectInput("density_facet_var", "Select Facet Variable (Categorical)", choices = c("", cat_options), selected = ""))
+          column(3, selectInput("density_x_var", "Select X (Numerical)", choices = num_options, selected = num_options[1])),
+          column(3, selectInput("density_fill_var", "Select Fill (Categorical)", choices = c("", cat_options), selected = "")),
+          column(3, selectInput("density_facet_var", "Select Facet (Categorical)", choices = c("", cat_options), selected = ""))
         )
       ),
       fluidRow(
         column(3, checkboxInput("radarplot", "Radar Plot")),
         conditionalPanel(
           condition = "input.radarplot == true",
-          column(9, selectInput("radar_cat_var", "Select Categorical Variable", choices = c("", cat_options), selected = ""))
+          column(9, selectInput("radar_cat_var", "Select Categorical Variable", choices = cat_options, selected = cat_options[1]))
         )
       ),
       fluidRow(
